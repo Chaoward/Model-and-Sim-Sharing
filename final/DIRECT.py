@@ -1,25 +1,41 @@
 import math as math
+from scipy import optimize as op
 from sim import signal_sim
 
 # 0 == empty
 # 1 == wall
 # 3 == receiver
 m1 =[
-    [0, 0, 0, 1, 0, 0, 1, 0, 0, 0]
-    [0, 0, 0, 0, 0, 0, 0, 0, 3, 0]
-    [0, 0, 0, 1, 0, 0, 1, 0, 0, 0]
-    [0, 0, 0, 1, 0, 0, 1, 0, 0, 0]
-    [1, 1, 1, 1, 0, 0, 1, 1, 1, 1]
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    [1, 0, 1, 1, 0, 0, 1, 1, 1, 1]
-    [0, 0, 0, 1, 0, 0, 0, 0, 0, 0]
+    [3, 3, 3, 1, 3, 3, 1, 3, 3, 3],
+    [3, 0, 0, 0, 0, 0, 0, 0, 0, 3],
+    [3, 0, 0, 1, 0, 0, 1, 0, 0, 3],
+    [3, 0, 0, 1, 0, 0, 1, 0, 0, 3],
+    [1, 1, 1, 1, 0, 0, 1, 1, 1, 1],
+    [3, 0, 0, 0, 0, 0, 0, 0, 0, 3],
+    [3, 0, 0, 0, 0, 0, 0, 0, 0, 3],
+    [1, 0, 1, 1, 0, 0, 1, 1, 1, 1],
+    [3, 0, 0, 1, 0, 0, 0, 0, 0, 3],
+    [3, 3, 3, 1, 3, 3, 1, 3, 3, 3]
+]
+
+m2 =[
+    [0, 0, 0, 1, 0, 0, 1, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 3, 0],
+    [0, 3, 0, 1, 0, 0, 1, 0, 0, 0],
+    [0, 0, 0, 1, 0, 0, 1, 0, 0, 0],
+    [1, 1, 1, 1, 0, 0, 1, 1, 1, 1],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [1, 0, 1, 1, 0, 0, 1, 1, 1, 1],
+    [0, 0, 3, 1, 0, 0, 0, 0, 3, 0],
     [0, 0, 0, 1, 0, 0, 1, 0, 0, 0]
 ]
 
 TERMINATE_FLOAT = 0.1
-TRANSMIT_POWER = 10
+TRANSMIT_POWER = 100
 ROOM_MAP = m1
+
+FIRST_COORD = None
 
 
 #get reciever coords
@@ -30,70 +46,39 @@ for i in range( len(ROOM_MAP) ):
             R_COORD_LIST.append( (i, j) )
 
 
+def toMapArray():
 
-class Rectangle:
-    def __init__(self, center_coord, w, l):
-        self.center = center_coord
-        self.width = w
-        self.length = l
-        self.f_val = obj_f(center_coord)
-        self.center_diameter = math.sqrt( (w*w) + (l*l) ) / 2
-    
-    def trisect(self):
-        newRect = []
-        if self.length > self.width or abs(self.length - self.width) < 1: #horizontal slices
-            one_third = self.length / 3
-            for i in range(3):
-                newRect.append( 
-                    Rectangle(
-                        (
-                            int(self.width / 2),
-                            int( (self.length/6) + (one_third*i) )
-                        ),
-                        self.width,
-                        self.length / 3
-                    ) 
-                )
-        elif self.length < self.width:                           #vertical slices
-            one_third = self.width / 3
-            for i in range(3):
-                newRect.append( 
-                    Rectangle(
-                        (
-                            int( (self.width/6) + (one_third*i) ),
-                            int(self.length / 2)
-                        ),
-                        self.width / 3,
-                        self.length
-                    ) 
-                )
+    pass
+
+
 
 
 # Center-value Distance = 
 # map [y] [x]
 def direct_search():
-    MAX_Y = len(ROOM_MAP)
     MAX_X = len(ROOM_MAP)
+    MAX_Y = len(ROOM_MAP[0])
 
-    lowest_bound = {} #<box diameter, f() value>
-    rect_set = []
-
-    #sample center of space
-    rect_set.append( Rectangle((MAX_X*0.5, MAX_Y*0.5), MAX_X, MAX_Y) )
-    
-    #Select rectangles
-    while len(rect_set) != 0:
-        #TODO : sample
-        curRect = rect_set.pop()
-        if curRect:
-            pass
-    pass
-
+    bounds = op.Bounds([0, 0], [MAX_X-1, MAX_Y-1])
+    results = op.direct( obj_f, bounds, maxiter=10000 )
+    print(results.x)
+    print(results.fun)
+    print(results.nfev)
+    print(results.message)
 
 
 def obj_f(t_coord):
+    global FIRST_COORD
+    if type(FIRST_COORD) == None:
+        FIRST_COORD = t_coord
     f_val = 0
     for receiver in R_COORD_LIST:
-        f_val += TRANSMIT_POWER - signal_sim(t_coord, receiver, TRANSMIT_POWER, ROOM_MAP)
+        f_val += TRANSMIT_POWER - signal_sim( (int(t_coord[0]), int(t_coord[1])), receiver, TRANSMIT_POWER, ROOM_MAP)
     f_val /= len(R_COORD_LIST)
     return f_val
+
+
+########## PROGRAM START #######################
+direct_search()
+print(obj_f( FIRST_COORD ))
+#print( obj_f( (5, 5) ) )
