@@ -39,10 +39,14 @@ map_array = [
 ]
 """
 
-def sameCoord(last_wall, location):
-    if type(last_wall) != tuple or type(location) != tuple:
+def sameCoord(first, second):
+    if first is None or second is None:
         return False
-    return last_wall[0] == location[0] and last_wall[1] == location[1]
+    return first == second
+    
+    #if type(last_wall) != tuple or type(location) != tuple:
+    #    return False
+    #return last_wall[0] == location[0] and last_wall[1] == location[1]
 
 
 def signal_sim(t_coord, r_coord, transmit_power, map_array):
