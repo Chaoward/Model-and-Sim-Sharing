@@ -20,7 +20,7 @@ class VectorLine:
         else:
             VectorLine.max_t = (r_coord[1] - t_coord[1]) / b_vector[1]
 
-    # returns slope
+    # returns coord on vector line based on t parameter
     def lineEquation(t):
         return (
             int( VectorLine.start_point[0] + (t * VectorLine.parallel_vector[0]) ),
@@ -65,12 +65,12 @@ def signal_sim(t_coord, r_coord, transmit_power, map_array):
     cur_location = VectorLine.start_point
     t = 0
     while not sameCoord(cur_location, r_coord) and t < VectorLine.max_t:
-        #print(cur_location)
         cell_value = map_array[int(cur_location[0])][int(cur_location[1])]
         if cell_value == 1 and not sameCoord(last_wall, cur_location):  # Wall encountered
             Pr -= 4.6
             last_wall = cur_location
         t += 0.1
         cur_location = VectorLine.lineEquation(t)
+        #print(cur_location)
         
     return Pr
